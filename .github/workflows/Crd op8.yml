@@ -141,12 +141,6 @@ jobs:
       - name: 🚀 Build Process
         uses: ./.github/workflows/build-process
 
-      - name: 🖼️ Generate DTB (kona + kona-v2 + kona-v2.1)
-        run: |
-          cd $GITHUB_WORKSPACE/device_kernel
-          cat out/arch/arm64/boot/dts/vendor/oplus/kona.dtb out/arch/arm64/boot/dts/vendor/oplus/kona-v2.dtb out/arch/arm64/boot/dts/vendor/oplus/kona-v2.1.dtb > out/arch/arm64/boot/dtb.img
-          echo "[+] Generated dtb.img"
-
       - name: 🔩 Pack Process
         uses: ./.github/workflows/pack-process
 
