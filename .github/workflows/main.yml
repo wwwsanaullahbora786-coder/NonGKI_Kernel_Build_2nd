@@ -25,7 +25,7 @@ env:
   GCC_32_BRANCH : "arm32"
 
   DEFCONFIG_SOURCE: ""
-  DEFCONFIG_NAME : "  DEFCONFIG_NAME : "vendor/kona-perf_defconfig"   # ⚠️ confirm this defconfig exists in luk1337's tree — it may not, since it's a different fork lineage
+  DEFCONFIG_NAME : "vendor/kona-perf_defconfig"   # ⚠️ confirm this defconfig exists in luk1337's tree — it may not, since it's a different fork lineage
   DEFCONFIG_ORIGIN_IMAGE: ""
   DEFCONFIG_FROM_BOOT: false
 
