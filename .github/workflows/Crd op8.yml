@@ -38,8 +38,8 @@ env:
   SUSFS_ENABLE : false
   SUSFS_FIXED : false
 
-  AK3_SOURCE : "https://github.com/osm0sis/AnyKernel3.git"
-  AK3_BRANCH : "master"
+  AK3_SOURCE : "https://github.com/JackA1ltman/OP8_AnyKernel3.git"
+  AK3_BRANCH : "main"
 
   BOOT_SOURCE : ""
 
@@ -143,8 +143,8 @@ jobs:
 
       - name: 🔍 List generated DTB files (debug)
         run: |
-       cd $GITHUB_WORKSPACE/device_kernel
-       find out/arch/arm64/boot/dts -iname "*.dtb" 2>/dev/null || echo "No dtb files found under dts/"
+          cd $GITHUB_WORKSPACE/device_kernel
+          find out/arch/arm64/boot/dts -iname "*.dtb" 2>/dev/null || echo "No dtb files found under dts/"
 
       - name: 🔩 Pack Process
         uses: ./.github/workflows/pack-process
