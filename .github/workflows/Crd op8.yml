@@ -141,6 +141,11 @@ jobs:
       - name: 🚀 Build Process
         uses: ./.github/workflows/build-process
 
+      - name: 🔍 List generated DTB files (debug)
+        run: |
+       cd $GITHUB_WORKSPACE/device_kernel
+       find out/arch/arm64/boot/dts -iname "*.dtb" 2>/dev/null || echo "No dtb files found under dts/"
+
       - name: 🔩 Pack Process
         uses: ./.github/workflows/pack-process
 
