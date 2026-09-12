@@ -17,7 +17,7 @@ env:
   # 自建完整内核仓库 (已将 vendor/devicetree + techpack 源码合并进内核树,
   # 不再需要单独克隆 vendor 仓库, 也不需要在 build 时解析 symlink)
   KERNEL_SOURCE : "https://github.com/TropsPk/android_kernel_oneplus_sm8250.git"
-  KERNEL_BRANCH : "complete-merge-oos-13.1-op8"
+  KERNEL_BRANCH : "op8"
 
   CLANG_SOURCE : "https://github.com/llvm/llvm-project/releases/download/llvmorg-19.1.7/LLVM-19.1.7-Linux-X64.tar.xz"
   CLANG_BRANCH : ""
