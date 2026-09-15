@@ -1,4 +1,4 @@
-name: Build Oneplus 8 (OxygenOS 13.1 A13) (KernelSU)
+name: Build Oneplus 8 (OxygenOS 13.1 A13) [merged repo, bare / optional KSU]
 
 on:
   workflow_call:
@@ -10,12 +10,10 @@ env:
   DEVICE_CODENAME : "instantnoodle"
 
   CUSTOM_CMDS : "CLANG_TRIPLE=aarch64-linux-android-"
-  # OOS 4.19.157 旧代码 + clang 19: 禁用新 clang 默认 -Werror 严格警告
-  # KCFLAGS 值必须用引号包裹(含空格), 否则 make 只取第一个参数
   EXTRA_CMDS : 'KCFLAGS="-Wno-strict-prototypes -Wno-incompatible-function-pointer-types -Wno-deprecated-non-prototype -Wno-implicit-int -Wno-int-to-pointer-cast -Wno-pointer-to-int-cast -Wno-implicit-function-declaration -Wno-unused-but-set-variable"'
 
-  # 自建完整内核仓库 (已将 vendor/devicetree + techpack 源码合并进内核树,
-  # 不再需要单独克隆 vendor 仓库, 也不需要在 build 时解析 symlink)
+  # Single merged repo: kernel + vendor/devicetree + techpack already in-tree.
+  # No VENDOR_SOURCE — build-ready no longer clones/merges a second repo.
   KERNEL_SOURCE : "https://github.com/TropsPk/android_kernel_oneplus_sm8250.git"
   KERNEL_BRANCH : "op8"
 
@@ -33,13 +31,15 @@ env:
   DEFCONFIG_ORIGIN_IMAGE: ""
   DEFCONFIG_FROM_BOOT: false
 
+  # Toggle only — KSU is skipped entirely (build-ready gates on this) until
+  # you flip it to "true". Get a bare compile working first, add KSU after.
+  KSU_ENABLE : "false"
+
   KERNELSU_SOURCE : ""
   KERNELSU_BRANCH : ""
 
-  # backslashxx KernelSU (master 最新), 手动钩子来自 issue #5
-  # (scope-minimized manual hooks, CONFIG_KSU 门控)
   KERNELSU_AUTO_GET : "true"
-  KERNELSU_AUTO_FORK : "xxksu" # xxksu = backslashxx/KernelSU
+  KERNELSU_AUTO_FORK : "next" # only read when KSU_ENABLE=true; pick your fork later
 
   SUSFS_ENABLE : false
   SUSFS_FIXED : false
@@ -52,7 +52,7 @@ env:
   NEED_DTBO : false
   NEED_SAFE_DTBO : false
 
-  ROM_TEXT : "oos13.1_a13_ksu"
+  ROM_TEXT : "oos13.1_a13"
 
   # Other env
   PYTHON_VERSION: "3"
@@ -68,7 +68,6 @@ env:
   SUSFS_FOLDER_FIXED: ""
   SUSFS_PATCH_FIXED: ""
 
-  # 仅 KernelSU, 不启用其他集成
   DROIDSPACES_ENABLE: "false"
   NOMOUNT_ENABLE: "false"
 
@@ -90,7 +89,6 @@ env:
   BUILD_DEBUGGER: "false"
   SKIP_PATCH: "false"
 
-  # OOS defconfig 已内嵌 oplus 配置, 无需额外 merge oplus.config
   BUILD_OTHER_CONFIG: "false"
   MERGE_CONFIG_FILES: ""
 
@@ -98,7 +96,7 @@ env:
 
 jobs:
   build-kernel:
-    name: Oneplus 8 (OxygenOS 13.1 A13) (KernelSU)
+    name: Oneplus 8 (OxygenOS 13.1 A13) [merged repo, bare / optional KSU]
     runs-on: ubuntu-latest
     env:
       CCACHE_COMPILERCHECK: "%compiler% -dumpmachine; %compiler% -dumpversion"
@@ -112,37 +110,19 @@ jobs:
       - name: ⌛️ Compilation environment preparation
         uses: ./.github/workflows/build-env
 
-      - name: ⚙️ Get necessary tools (clone kernel + setup KernelSU)
+      - name: ⚙️ Get neccssary tools
         uses: ./.github/workflows/build-ready
 
-      - name: 📌 Kernel version suffix (self-contained fork)
+      - name: 📌 Kernel version suffix (OOS)
         run: |
           cd $GITHUB_WORKSPACE/kernel/device_kernel
-          # backslashxx KernelSU setup.sh 已注册 drivers/kernelsu (Makefile+Kconfig)
-          # 这里仅设置自定义版本后缀
-          echo "-g$(git rev-parse --short HEAD)-oos-ksu" > .scmversion
+          echo "-g$(git rev-parse --short HEAD)-oos-merged" > .scmversion
           echo "[+] .scmversion written."
-
-      - name: 🪝 Apply KernelSU manual hooks (backslashxx issue #5, 4.19)
-        run: |
-          cd $GITHUB_WORKSPACE/kernel/device_kernel/
-          cp /tmp/Patches/Patch/ksu_manual_hooks_4.19.patch ./
-          patch -p1 < ksu_manual_hooks_4.19.patch || true
-          rm -f ksu_manual_hooks_4.19.patch
-          echo "[+] KernelSU manual hooks patched (exec/faccessat/newfstatat+ret/reboot)."
-
-      - name: 📝 Apply KernelSU defconfig fragment
-        run: |
-          cd $GITHUB_WORKSPACE/kernel/device_kernel/
-          cp /tmp/Patches/Patch/defconfig_ksu.patch ./
-          patch -p1 < defconfig_ksu.patch || true
-          rm -f defconfig_ksu.patch
-          echo "[+] KernelSU defconfig applied."
 
       - name: 🚀 Build Process
         uses: ./.github/workflows/build-process
 
-      - name: 🖼️ Generate DTB (concat kona dtb variants)
+      - name: 🖼️ Generate DTB (OOS concat kona dtb variants)
         run: |
           cd $GITHUB_WORKSPACE/kernel/device_kernel
           DTB_DIR="out/arch/arm64/boot/dts/vendor/19821"
@@ -150,7 +130,6 @@ jobs:
             cat "$DTB_DIR/kona-mtp.dtb" > out/arch/arm64/boot/dtb.img
             echo "[+] Generated dtb.img from kona-mtp.dtb"
           else
-            # 回退: 拼接 vendor 下所有 dtb (与 OnePlus 官方 AndroidKernel.mk 一致)
             cat out/arch/arm64/boot/dts/vendor/*/*.dtb > out/arch/arm64/boot/dtb.img
             echo "[+] Generated dtb.img (concat all vendor dtbs)"
           fi
