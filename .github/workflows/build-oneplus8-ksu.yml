@@ -113,12 +113,6 @@ jobs:
       - name: ⚙️ Get neccssary tools
         uses: ./.github/workflows/build-ready
 
-      - name: 📌 Kernel version suffix (OOS)
-        run: |
-          cd $GITHUB_WORKSPACE/kernel/device_kernel
-          echo "-g$(git rev-parse --short HEAD)-oos-merged" > .scmversion
-          echo "[+] .scmversion written."
-
       - name: 🚀 Build Process
         uses: ./.github/workflows/build-process
 
